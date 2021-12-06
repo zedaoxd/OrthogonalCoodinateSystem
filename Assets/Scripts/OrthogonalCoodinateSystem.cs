@@ -6,8 +6,8 @@ using UnityEngine.Serialization;
 
 public enum Handedness
 {
-    Left = 0,
-    Right = 1,
+    Left = 1,
+    Right = -1,
 }
 
 public class OrthogonalCoodinateSystem : MonoBehaviour
@@ -19,53 +19,30 @@ public class OrthogonalCoodinateSystem : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        DrawVectors();
-    }
+        var v1 = v;
+        var v2 = w;
+        var v3 = Vector3.Cross(v, w) * ConvertEnumToInt(handedness);
 
-    private void DrawVectors ()
-    {
-        var croosProduct = CrossProduct(v, w);
         if (forceOrthogonalSystem)
         {
-            croosProduct = GramSchmidtOrthogonalization(v, w, croosProduct);
-            HandednessType(croosProduct);
-            return;
+            v1.Normalize();
+            v3.Normalize();
+            v2 = (Vector3.Cross(v3, v1) * ConvertEnumToInt(handedness)).normalized;
         }
         
-        Gizmos.color = Color.red;
-        GizmosUtils.DrawVectorAtOrigin(v);
-        Gizmos.color = Color.green;
-        GizmosUtils.DrawVectorAtOrigin(w);
-        HandednessType(croosProduct);
-    }
-
-    private static Vector3 CrossProduct(Vector3 v, Vector3 w)
-    {
-        return new Vector3()
-        {
-            x = v.y * w.z - v.z * w.y,
-            y = v.z * w.x - v.x * w.z,
-            z = v.x * w.y - v.y * w.x,
-        };
-    }
-
-    private void HandednessType(Vector3 croosProduct)
-    {
         Gizmos.color = Color.yellow;
-        GizmosUtils.DrawVectorAtOrigin(handedness == Handedness.Left ? croosProduct : -croosProduct);
-    }
-
-    private Vector3 GramSchmidtOrthogonalization(Vector3 v1, Vector3 v2, Vector3 v3)
-    {
-        Vector3 w1 = v1;
-        Vector3 w2 = v2 - (Vector3.Dot(v2, w1) / Vector3.Dot(w1, w1)) * w1;
-        Vector3 w3 = v3 - (Vector3.Dot(v3, w2) / Vector3.Dot(w2, w2)) * w2 -
-                     (Vector3.Dot(v3, w1) / Vector3.Dot(w1, w1)) * w1;
+        GizmosUtils.DrawVectorAtOrigin(v1);
+        
+        Gizmos.color = Color.green;
+        GizmosUtils.DrawVectorAtOrigin(v2);
         
         Gizmos.color = Color.red;
-        GizmosUtils.DrawVectorAtOrigin(w1 / w1.magnitude);
-        Gizmos.color = Color.green;
-        GizmosUtils.DrawVectorAtOrigin(w2 / w2.magnitude);
-        return w3 / w3.magnitude;
+        GizmosUtils.DrawVectorAtOrigin(v3);
     }
+
+    private int ConvertEnumToInt(Handedness hand)
+    {
+        return (int) hand;
+    }
+    
 }
